@@ -5,12 +5,12 @@ import {
   Param,
   Query,
   Post,
-  ParseIntPipe,
   Put,
   UsePipes,
   ValidationPipe,
   UseInterceptors,
   UploadedFile,
+  Delete,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminDTO } from './admin.dto';
@@ -22,21 +22,31 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get()
-  getAllAdmin(): AdminDTO[] {
+  getAllAdmin(): object {
     return this.adminService.getAllAdmin();
   }
 
   @Get('getadminbyid/:id')
-  getAdminById(@Param('id', ParseIntPipe) id: number): AdminDTO {
+  getAdminById(@Param('id') id: string): object {
     return this.adminService.getAdminById(id);
+  }
+
+  @Get('getadminwithnoname')
+  getAdminWithNoName(): object {
+    return this.adminService.getAdminWithNoName();
   }
 
   @Get('getadminbyquery')
   getAdminByQuery(
-    @Query('name') name: string,
+    @Query('fullname') fullname: string,
     @Query('email') email: string,
-  ): AdminDTO[] {
-    return this.adminService.getAdminByQuery(name, email);
+  ): object {
+    return this.adminService.getAdminByQuery(fullname, email);
+  }
+
+  @Get('getadminwithspecificcolumn')
+  getadminwithspecificcolumn(): object {
+    return this.adminService.getAdminWithSpecificColumn();
   }
 
   @UseInterceptors(
@@ -62,17 +72,18 @@ export class AdminController {
   postAdminByBody(
     @Body() adminData: AdminDTO,
     @UploadedFile() myfile: Express.Multer.File,
-  ): AdminDTO {
+  ): object {
     adminData.profilePic = myfile.filename;
-    adminData.id = Number(adminData.id);
     return this.adminService.postAdminByBody(adminData);
   }
 
   @Put('updateadmin/:id')
-  updateAdmin(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() adminData: AdminDTO,
-  ): AdminDTO {
+  updateAdmin(@Param('id') id: string, @Body() adminData: AdminDTO): object {
     return this.adminService.updateAdmin(id, adminData);
+  }
+
+  @Delete('deleteadmin/:id')
+  deleteAdmin(@Param('id') id: string): object {
+    return this.adminService.deleteAdmin(id);
   }
 }

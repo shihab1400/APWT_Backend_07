@@ -11,11 +11,11 @@ export class UserService {
       password: 'Pass123',
       gender: 'female',
       phone: '01711111111',
-      profilePic: 'default.jpg'
-    }
+      profilePic: 'default.jpg',
+    },
   ];
 
-  getAllUsers(): object { 
+  getAllUsers(): object {
     return this.patientData;
   }
 
@@ -34,7 +34,7 @@ export class UserService {
     this.patientData.push(data);
     return {
       message: 'Patient profile created with image successfully!',
-      data: data
+      data: data,
     };
   }
 }

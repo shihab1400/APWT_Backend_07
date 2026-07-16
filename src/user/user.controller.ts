@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, UsePipes, ValidationPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UsePipes,
+  ValidationPipe,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { PatientDTO } from './patient.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -9,7 +18,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('getAllUsers')
-  getAllUsers(): object { 
+  getAllUsers(): object {
     return this.userService.getAllUsers();
   }
 
@@ -22,7 +31,8 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('myfile', {
       fileFilter: (req, file, cb) => {
-        if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/)) cb(null, true);
+        if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/))
+          cb(null, true);
         else cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
       },
       limits: { fileSize: 2000000 },
@@ -35,7 +45,10 @@ export class UserController {
     }),
   )
   @UsePipes(new ValidationPipe())
-  createPatient(@Body() patientData: PatientDTO, @UploadedFile() myfile: Express.Multer.File): object {
+  createPatient(
+    @Body() patientData: PatientDTO,
+    @UploadedFile() myfile: Express.Multer.File,
+  ): object {
     if (myfile) {
       patientData.profilePic = myfile.filename;
     }

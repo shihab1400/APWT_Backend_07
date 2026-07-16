@@ -1,68 +1,89 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AdminDTO } from './admin.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AdminEntity } from './admin.entity';
+import { IsNull, Like, Repository } from 'typeorm';
 
 @Injectable()
 export class AdminService {
-  adminData: AdminDTO[] = [
-    {
-      id: 1,
-      name: 'Shihab',
-      email: 'shihab@gmail.xyz',
-      nid: '2312345678',
-      profilePic: '12334sdwe',
-    },
-    {
-      id: 2,
-      name: 'Farhat',
-      email: 'farhat@gmail.xyz',
-      nid: '1234125623',
-      profilePic: '23sfdwqed',
-    },
-  ];
+  constructor(
+    @InjectRepository(AdminEntity)
+    private adminRepository: Repository<AdminEntity>,
+  ) {}
 
-  getAllAdmin(): AdminDTO[] {
-    return this.adminData;
+  async getAllAdmin(): Promise<AdminEntity[]> {
+    return await this.adminRepository.find();
   }
 
-  getAdminById(id: number): AdminDTO {
-    const admin = this.adminData.find((i) => i.id === id);
+  async getAdminById(id: string): Promise<AdminEntity> {
+    const admin = await this.adminRepository.findOne({
+      where: { adminId: id },
+    });
     if (!admin) {
-      throw new NotFoundException(`Admin with ID ${id} not found`);
+      throw new NotFoundException(`Admin with ID ${id} not found!`);
     }
     return admin;
   }
 
-  getAdminByQuery(name: string, email: string): AdminDTO[] {
-    const filteredAdmins = this.adminData.filter(
-      (n) =>
-        n.name?.toLowerCase() === name.toLowerCase() &&
-        n.email?.toLowerCase() === email.toLowerCase(),
-    );
-
-    if (filteredAdmins.length === 0) {
-      throw new NotFoundException(
-        `Admin with name "${name}" and email "${email}" not found`,
-      );
-    }
-
-    return filteredAdmins;
+  async getAdminWithSpecificColumn(): Promise<AdminEntity[]> {
+    const admins = await this.adminRepository.find({
+      select: {
+        fullname: true,
+        nid: true,
+      },
+    });
+    return admins;
   }
 
-  postAdminByBody(data: AdminDTO): AdminDTO {
-    const ex = this.adminData.find((i) => i.id === data.id);
-    if (ex) {
-      throw new NotFoundException(`Admin with ID "${data.id}" already exists`);
-    }
-    this.adminData.push(data);
-    return data;
+  async getAdminWithNoName(): Promise<AdminEntity[]> {
+    const admin = await this.adminRepository.find({
+      where: { fullname: IsNull() },
+    });
+    return admin;
   }
 
-  updateAdmin(id: number, adminObj: AdminDTO): AdminDTO {
-    const adminIndex = this.adminData.findIndex((admin) => admin.id === id);
-    if (adminIndex === -1) {
-      throw new NotFoundException(`Admin with ID ${id} not found`);
+  async getAdminByQuery(
+    fullname: string,
+    email: string,
+  ): Promise<AdminEntity[]> {
+    return await this.adminRepository.find({
+      where: {
+        fullname: Like(`%${fullname}%`),
+        email: Like(`%${email}%`),
+      },
+    });
+  }
+
+  async postAdminByBody(data: AdminDTO): Promise<AdminEntity> {
+    const admin = this.adminRepository.create(data); // Converted to entity class instance
+    return await this.adminRepository.save(admin);
+  }
+
+  async updateAdmin(id: string, adminObj: AdminDTO): Promise<AdminEntity> {
+    const findAdmin = await this.adminRepository.findOne({
+      where: { adminId: id },
+    });
+    if (!findAdmin) {
+      throw new NotFoundException(`Admin with ID ${id} not found!`);
     }
-    this.adminData[adminIndex] = adminObj;
-    return adminObj;
+    await this.adminRepository.update(id, adminObj);
+    const updatedAdmin = await this.adminRepository.findOne({
+      where: { adminId: id },
+    });
+    return updatedAdmin!;
+  }
+
+  async deleteAdmin(id: string): Promise<object> {
+    const findAdmin = await this.adminRepository.findOne({
+      where: { adminId: id },
+    });
+    if (!findAdmin) {
+      throw new NotFoundException(`Admin with ID ${id} not found!`);
+    }
+    await this.adminRepository.delete(id);
+    const deletedAdmin = {
+      message: `Admin with id ${id} is deleted successfully!`,
+    };
+    return deletedAdmin;
   }
 }

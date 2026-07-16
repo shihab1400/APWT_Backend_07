@@ -3,8 +3,6 @@ import { PaidPatientDto } from './paidpatient.dto';
 
 @Injectable()
 export class PaidPatientService {
-
-  
   private patientData: PaidPatientDto[] = [
     {
       name: 'Rahim',
@@ -20,7 +18,6 @@ export class PaidPatientService {
     },
   ];
 
-  
   getChatHistory(): object {
     return {
       message: 'Chat history fetched successfully',
@@ -28,7 +25,6 @@ export class PaidPatientService {
     };
   }
 
- 
   getAssessmentQuiz(): object {
     return {
       message: 'Assessment quiz fetched successfully',
@@ -36,7 +32,6 @@ export class PaidPatientService {
     };
   }
 
-  
   getAppointmentDetails(id: number): object {
     const data = [
       { id: 1, name: 'Nipa', age: 60 },
@@ -53,7 +48,6 @@ export class PaidPatientService {
     return result;
   }
 
-  
   getPaymentRecords(userId: number, type: string): object {
     const payments = [
       { userid: 1, name: 'Nipa', type: 'monthly', amount: 100 },
@@ -72,11 +66,8 @@ export class PaidPatientService {
     return result;
   }
 
-  
   createRecord(dto: PaidPatientDto): PaidPatientDto {
-    const exists = this.patientData.find(
-      (p) => p.phone === dto.phone,
-    );
+    const exists = this.patientData.find((p) => p.phone === dto.phone);
 
     if (exists) {
       throw new NotFoundException('Patient already exists');
@@ -87,17 +78,13 @@ export class PaidPatientService {
     return dto;
   }
 
-  
   updateRecord(name: string, dto: PaidPatientDto): object {
-    const index = this.patientData.findIndex(
-      (p) => p.name === name,
-    );
+    const index = this.patientData.findIndex((p) => p.name === name);
 
     if (index === -1) {
       throw new NotFoundException('Patient not found');
     }
 
-    
     if (dto.name) {
       this.patientData[index].name = dto.name;
     }
@@ -120,7 +107,6 @@ export class PaidPatientService {
     };
   }
 
-  
   getAllPatients(): PaidPatientDto[] {
     return this.patientData;
   }
