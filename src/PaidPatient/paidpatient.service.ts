@@ -1,23 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaidPatientDto } from './paidpatient.dto';
+import { PaidPatientEntity } from './paidpatient.entity';
+import{ Like, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AdminEntity } from 'src/admin/admin.entity';
 
 @Injectable()
 export class PaidPatientService {
-  private patientData: PaidPatientDto[] = [
-    {
-      name: 'Rahim',
-      phone: '01711111111',
-      password: 'abc123',
-      file: 'file1.pdf',
-    },
-    {
-      name: 'Karim',
-      phone: '01999999999',
-      password: 'pass123',
-      file: 'file2.pdf',
-    },
-  ];
 
+  constructor(
+    @InjectRepository(PaidPatientEntity)
+    private readonly paidPatientRepository: Repository<PaidPatientEntity>
+  ) {}
+
+  
+
+  async getAllPatients(): Promise<PaidPatientEntity[]> {
+    return await this.paidPatientRepository.find();
+  }
   getChatHistory(): object {
     return {
       message: 'Chat history fetched successfully',
@@ -25,6 +25,7 @@ export class PaidPatientService {
     };
   }
 
+ 
   getAssessmentQuiz(): object {
     return {
       message: 'Assessment quiz fetched successfully',
@@ -32,6 +33,7 @@ export class PaidPatientService {
     };
   }
 
+  
   getAppointmentDetails(id: number): object {
     const data = [
       { id: 1, name: 'Nipa', age: 60 },
@@ -48,6 +50,7 @@ export class PaidPatientService {
     return result;
   }
 
+  
   getPaymentRecords(userId: number, type: string): object {
     const payments = [
       { userid: 1, name: 'Nipa', type: 'monthly', amount: 100 },
@@ -65,49 +68,106 @@ export class PaidPatientService {
 
     return result;
   }
+ async getPatientByFullName(fullName: string): Promise<PaidPatientEntity[]> {
+    return await this.paidPatientRepository.find({
+      where: { fullName: Like(`%${fullName}%`) },
+    });
+  }
+  async getPatientByUsernameWithoutSpecific(username: string): Promise<object> {
 
-  createRecord(dto: PaidPatientDto): PaidPatientDto {
-    const exists = this.patientData.find((p) => p.phone === dto.phone);
+  const patient = await this.paidPatientRepository.findOne({
+    where: { username: Like(`%${username}%`) },
 
-    if (exists) {
-      throw new NotFoundException('Patient already exists');
-    }
+    select: {
+      patientId: true,
+      username: true,
+      fullName: true,
+    },
+  });
 
-    this.patientData.push(dto);
 
-    return dto;
+  if (!patient) {
+    throw new NotFoundException('Patient not found');
   }
 
-  updateRecord(name: string, dto: PaidPatientDto): object {
-    const index = this.patientData.findIndex((p) => p.name === name);
+  return patient;
+}
+  async getPatientByUsername(username: string): Promise<PaidPatientEntity> {
+    const patient = await this.paidPatientRepository.findOne({
+      where: { username: username },
+      // relations: {
+      //   admin: true, // 👈 Use an object mapping instead of a string array
+      // },
+    });
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+    return patient;
+  }
+ // async getAdminInfoByPatientId(id: string): Promise<AdminEntity> {
+   // const patient = await this.paidPatientRepository.findOne({
+     // where: { patientId: id },
+      // relations: {
+      //   admin: true, // 👈 Use an object mapping instead of a string array
+      // },
+   // });
+   // if (!patient) {
+    //  throw new NotFoundException('Patient not found');
+   // }
+   // return patient.admin;
+ // }
+ 
 
-    if (index === -1) {
+  async getPatientByUsernameWithoutPassword(username: string): Promise<object> {
+    const patient = await this.paidPatientRepository.findOne({
+      where: { username: username },
+      
+    });
+    if (!patient) {
       throw new NotFoundException('Patient not found');
     }
 
-    if (dto.name) {
-      this.patientData[index].name = dto.name;
+    const { password, ...patientWithoutPassword } = patient;
+    return patientWithoutPassword;
+  }
+ 
+  async deleteRecord(username: string): Promise<object> {
+    const patient = await this.paidPatientRepository.findOne({
+      where: { username: username },
+    });
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+    await this.paidPatientRepository.remove(patient);
+    return { message: 'Patient record deleted successfully' };
+  }
+  
+async createRecord(dto: PaidPatientDto): Promise<PaidPatientEntity> {
+   // const { adminId, ...patientData } = dto;
+    //const paidpatient = this.paidPatientRepository.create({
+     // ...patientData,
+      //admin: adminId ? { adminId: adminId } : undefined,
+    //});
+    const paidpatient = this.paidPatientRepository.create(dto);
+    return await this.paidPatientRepository.save(paidpatient);
+  }
+ 
+
+  
+  async updateRecord(id: string, dto: PaidPatientDto): Promise<object> {
+    const index = this.paidPatientRepository.findOneBy({ patientId: id });
+
+    if (!index) {
+      throw new NotFoundException('Patient not found');
     }
 
-    if (dto.phone) {
-      this.patientData[index].phone = dto.phone;
-    }
-
-    if (dto.password) {
-      this.patientData[index].password = dto.password;
-    }
-
-    if (dto.file) {
-      this.patientData[index].file = dto.file;
-    }
+    await this.paidPatientRepository.update({ patientId: id }, dto);
 
     return {
-      message: 'Updated successfully',
-      data: this.patientData[index],
+      message: 'Patient record updated successfully',
     };
   }
 
-  getAllPatients(): PaidPatientDto[] {
-    return this.patientData;
-  }
+    
+    
 }

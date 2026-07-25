@@ -17,7 +17,7 @@ import { PaidPatientModule } from './PaidPatient/paidpatient.module';
       port: 5432,
       username: 'postgres',
       password: 'admin123',
-      database: 'apwt_07', //Change to your database name
+      database: 'awt', //Change to your database name
       autoLoadEntities: true,
       synchronize: true,
     }),
