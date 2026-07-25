@@ -10,6 +10,7 @@ import {
   ValidationPipe,
   UploadedFile,
   UseInterceptors,
+  Delete,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -17,13 +18,48 @@ import { diskStorage, MulterError } from 'multer';
 
 import { PaidPatientService } from './paidpatient.service';
 import { PaidPatientDto } from './paidpatient.dto';
+import { PaidPatientEntity } from './paidpatient.entity';
+import { AdminEntity } from 'src/admin/admin.entity';
 
 @Controller('paid-patient')
 export class PaidPatientController {
   constructor(private readonly paidPatientService: PaidPatientService) {}
 
-  
-  
+  @Get('all-patients')
+  getAllpatients(): Promise<PaidPatientEntity[]> {
+    return this.paidPatientService.getAllPatients();
+  }
+  @Get('fullName/:fullName')
+  getPatientByFullName(@Param('fullName') fullName: string): Promise<PaidPatientEntity[]> {
+    return this.paidPatientService.getPatientByFullName(fullName);
+  }
+   @Get('getpatientbyusername/:username')
+  getPatientByUsername(@Param('username') username: string): Promise<PaidPatientEntity> {
+    return this.paidPatientService.getPatientByUsername(username);
+  }
+
+//@Get('getadmininfobypatientid/:id')
+  //getAdminInfoByPatientId(@Param('id') id: string): Promise<AdminEntity> {
+   // return this.paidPatientService.getAdminInfoByPatientId(id);
+ // }
+
+  @Get('getpatientbyusernamewithoutpassword/:username')
+  getPatientByUsernameWithoutPassword(@Param('username') username: string): Promise<object> {
+    return this.paidPatientService.getPatientByUsernameWithoutPassword(username);
+  }
+
+  @Get('getpatientbyusernamewithoutspecific/:username')
+  getPatientByUsernameWithoutSpecific(@Param('username') username: string): Promise<object> {
+    return this.paidPatientService.getPatientByUsernameWithoutSpecific(username);
+  }
+
+
+
+  @Delete('delete-record/:username')
+
+  deleteRecord(@Param('username') username: string): Promise<object> {
+    return this.paidPatientService.deleteRecord(username);
+  }
   @Get('chat-history')
   getChatHistory(): object {
     return this.paidPatientService.getChatHistory();
@@ -76,17 +112,17 @@ export class PaidPatientController {
   createRecord(
     @Body() dto: PaidPatientDto,
     @UploadedFile() file: Express.Multer.File,
-  ): PaidPatientDto {
+  ): object {
     dto.file = file?.filename;
     return this.paidPatientService.createRecord(dto);
   }
 
   
-  @Put('update-record/:name')
+  @Put('update-record/:id')
   updateRecord(
-    @Param('name') name: string,
+    @Param('id') id: string,
     @Body() dto: PaidPatientDto,
   ): object {
-    return this.paidPatientService.updateRecord(name, dto);
+    return this.paidPatientService.updateRecord(id, dto);
   }
 }
